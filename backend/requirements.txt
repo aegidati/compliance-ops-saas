@@ -1,0 +1,20 @@
+# FastAPI web framework and ASGI server
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+
+# Data validation and settings management
+pydantic==2.11.3
+pydantic-settings==2.8.1
+
+# JWT token support (stub auth stage)
+PyJWT==2.12.0
+
+# Password hashing (bcrypt via passlib)
+passlib[bcrypt]==1.7.4
+bcrypt==4.3.0
+
+# Testing
+pytest==8.3.5
+httpx==0.28.1
+pytest-asyncio==0.25.3
+anyio==4.9.0
