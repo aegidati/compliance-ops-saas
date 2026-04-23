@@ -1,0 +1,113 @@
+# .github/copilot-setup-steps.yml
+# Bootstrap environment for GitHub Copilot Coding Agent
+# Stack: Python backend + React frontend
+# Goal: predictable, safe, best-effort setup for early-stage development
+
+steps:
+  # ---------------------------------------------------------
+  # Inspect repository (always first)
+  # ---------------------------------------------------------
+  - name: Show repository structure
+    run: |
+      echo "=== Repository tree ==="
+      ls -la
+      echo "=== Files (depth 3) ==="
+      find . -maxdepth 3 -type f | sed 's|^\./||' | sort
+
+  # ---------------------------------------------------------
+  # Python backend environment
+  # ---------------------------------------------------------
+  - name: Set up Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: '3.12'
+
+  - name: Install backend dependencies (if present)
+    run: |
+      if [ -d backend ]; then
+        cd backend
+
+        if [ -f requirements.txt ]; then
+          echo "Installing Python dependencies from requirements.txt"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        fi
+
+        if [ -f pyproject.toml ]; then
+          echo "Installing Python dependencies from pyproject.toml"
+          python -m pip install --upgrade pip
+          pip install .
+        fi
+
+        cd ..
+      else
+        echo "No backend directory found, skipping backend setup"
+      fi
+
+  # ---------------------------------------------------------
+  # React frontend environment
+  # ---------------------------------------------------------
+  - name: Set up Node.js
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+
+  - name: Install frontend dependencies (if present)
+    run: |
+      if [ -d frontend ]; then
+        cd frontend
+
+        if [ -f package-lock.json ]; then
+          echo "Installing frontend dependencies with npm ci"
+          npm ci
+        elif [ -f yarn.lock ]; then
+          echo "Installing frontend dependencies with yarn"
+          yarn install --frozen-lockfile
+        elif [ -f pnpm-lock.yaml ]; then
+          echo "Installing frontend dependencies with pnpm"
+          corepack enable
+          pnpm install --frozen-lockfile
+        else
+          echo "No lockfile found, skipping frontend dependency install"
+        fi
+
+        cd ..
+      else
+        echo "No frontend directory found, skipping frontend setup"
+      fi
+
+  # ---------------------------------------------------------
+  # Tests & checks (best-effort, non-blocking at MVP stage)
+  # ---------------------------------------------------------
+  - name: Run backend tests (if present)
+    run: |
+      if [ -d backend ]; then
+        cd backend
+
+        if [ -d tests ]; then
+          echo "Running Python tests"
+          pytest || true
+        else
+          echo "No backend tests directory found"
+        fi
+
+        cd ..
+      fi
+
+  - name: Run frontend tests/build (if present)
+    run: |
+      if [ -d frontend ]; then
+        cd frontend
+
+        if npm run | grep -q "test"; then
+          echo "Running frontend tests"
+          npm test --silent || true
+        fi
+
+        if npm run | grep -q "build"; then
+          echo "Running frontend build"
+          npm run build || true
+        fi
+
+        cd ..
+      fi
